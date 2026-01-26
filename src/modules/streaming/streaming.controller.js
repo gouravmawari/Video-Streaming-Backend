@@ -10,6 +10,12 @@ const heartBeat = async (req, res) => {
   res.status(result.status).json(result.data);
 };
 
+const presignURL = async(req,res)=>{
+  const {videoID, subUserId, userId} = req.body;
+  const response = await presignUrlService(videoId,subuserId);
+  res.status()
+}
+
 const endStream = async (req, res) => {
   const { userId, subUserId, videoId } = req.body;
   const result = await endStreamService(userId, subUserId, videoId);

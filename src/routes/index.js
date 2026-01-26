@@ -10,8 +10,11 @@ const contentMoviesController = require('../modules/content/movies/movies.contro
 const streamingController = require('../modules/streaming/streaming.controller');
 const progressController = require('../modules/progress/progress.controller');
 const partialDownloadController = require('../modules/content/partial-download/partial-download.controller');
-
+const mlCall = require("../common/service/ml.service");
 const router = express.Router();
+
+
+router.get('/user/suggestion',mlCall);
 
 router.post('/auth/register',register,validate,authController.register);
 router.post('/auth/login', apiLimiter,login,validate,authController.login);

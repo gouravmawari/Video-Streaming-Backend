@@ -5,17 +5,17 @@ const bodyParser = require('body-parser');
 const connectDB = require('./config/database');
 const redis = require('./common/utils/redisClient');
 const routes = require('./routes');
-
+const errorMiddleware = require("./common/middleware/errorMiddlware");
 const app = express();
-const PORT = prccess.env.PORT;
+const PORT = process.env.PORT;
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
+app.use(errorMiddleware);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.use('/api', routes);
-
 connectDB();
 
 const server = app.listen(PORT, () => {

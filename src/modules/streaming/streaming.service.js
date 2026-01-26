@@ -5,27 +5,39 @@ const Video = require("../../database/models/Video");
 const SeriesVideo = require("../../database/models/SeriesVideo");
 const SubUser = require("../../database/models/SubUser");
 const { syncProgressToDBService } = require("../progress/progress.service");
+const verifyStreamToken = require("../../common/utils/streamToken");
+const catchAsync = require("../../common/utils/catchAsync");
+const AppError = require("../../common/utils/error");
+let SECRET = "lund_lele";
+const crypto = require('crypto');
 
-const streamVideoService = async (req, res) => {
-    try {
-        const { videoID, subUserId, userId } = req.params;
+const streamVideoService = catchAsync( async (req, res) => {
+  
+        const { signature } = req.params;
+        let payload = verifyStreamToken(signature);
+        let videoID =payload.videoID;
+        let subUserId = payload.subUserId;
+        let userId = payload.userId;
 
         const isSeries = videoID.includes("series_");
         const video = isSeries
             ? await SeriesVideo.findOne({ CustomId: videoID })
             : await Video.findOne({ CustomId: videoID });
 
-        if (!video || !video.filename) return res.status(404).send("Video not found");
+        if (!video || !video.filename){
+          throw new AppError("Video not found",404);
+        }
 
         const streamKey = `streaming:${userId}:${subUserId}`;
         const activeKeys = await redis.keys(`streaming:${userId}:*`);
 
         const otherActive = activeKeys.find(key => key !== streamKey);
         if (otherActive) {
-            return res.status(429).json({
-                message: "Only one sub-user can stream at a time for this account.",
-                activeStream: otherActive
-            });
+            // return res.status(429).json({
+            //     message: "Only one sub-user can stream at a time for this account.",
+            //     activeStream: otherActive
+            // });
+            throw new AppError("Only one sub-user can stream at a time for this account.",429);
         }
 
         const result = await redis.set(streamKey, "active", "EX", 60, "NX");
@@ -74,11 +86,7 @@ const streamVideoService = async (req, res) => {
             await cleanup();
             res.end();
         });
-    } catch (err) {
-        console.error("Stream failed:", err);
-        res.status(500).send(err.message);
-    }
-};
+});
 
 const heartBeatService = async (userId, subUserId) => {
   const streamKey = `streaming:${userId}:${subUserId}`;
@@ -105,5 +113,31 @@ const endStreamService = async (userId, subUserId, videoId) => {
 
   return { status: 200, data: { message: "Stream ended" } };
 };
+
+
+
+const presignUrlService = async (videoId, subUserId, userId) => {
+  const payload = {
+    videoId: videoId,
+    subUserId: subUserId,
+    userId: userId,
+    exp: Date.now() + 30 * 60 * 1000, // 30 minutes
+    startTime: Date.now()
+  };
+
+  const data = Buffer
+    .from(JSON.stringify(payload))
+    .toString('base64');
+
+  const signature = crypto
+    .createHmac('sha256', SECRET)
+    .update(data)
+    .digest('hex');
+
+  return `${data}.${signature}`;
+};
+
+module.exports = presignUrlService;
+
 
 module.exports = { streamVideoService, heartBeatService, endStreamService };
