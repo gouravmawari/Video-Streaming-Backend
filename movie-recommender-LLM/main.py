@@ -4,7 +4,6 @@ import pandas as pd
 
 app = FastAPI(title="Movie Recommendation API")
 
-# Load everything ONCE
 model = joblib.load("svd_model.pkl")
 movie_titles = joblib.load("movie_titles.pkl")
 ratings = pd.read_pickle("ratings.pkl")
@@ -16,13 +15,8 @@ def health():
 
 @app.get("/recommend/{user_id}")
 def recommend_movies(user_id: int, n: int = 10):
-    # Movies user already rated
     rated_movies = ratings[ratings.userId == user_id]["movieId"].tolist()
-
-    # All movies
     all_movies = movies["movieId"].tolist()
-
-    # Unseen movies
     unseen_movies = [m for m in all_movies if m not in rated_movies]
 
     predictions = []
