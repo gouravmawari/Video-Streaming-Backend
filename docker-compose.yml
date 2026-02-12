@@ -7,10 +7,16 @@ services:
     ports:
       - "8888:8888"
     env_file:
-      - .env
+      - ./src/.env
     depends_on:
       - redis
     restart: always
+
+  llm:
+    build: ./movie-recommender-LLM
+    container_name: recommendation-llm
+    ports:
+      - "8000:8000"
 
   redis:
     image: redis:7-alpine

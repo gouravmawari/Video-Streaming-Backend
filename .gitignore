@@ -1,6 +1,12 @@
-.env
-node_modules
+**/.env
+node_modules/
+package-lock.json
 __pycache__/
 *.py[cod]
 venv/
 *.pkl
+docker-compose.override.yml
+Thumbs.db
+.DS_Store
+.vscode/
+.idea/
