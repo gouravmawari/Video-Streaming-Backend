@@ -1,0 +1,6 @@
+[docker-nodejs]
+16.171.6.74 ansible_user=admin ansible_ssh_private_key_file=~/.ssh/NodeJS-1-pair.pem
+13.48.248.226 ansible_user=admin ansible_ssh_private_key_file=~/.ssh/NodeJS-2-pair.pem
+
+[nginx]
+13.60.25.48 ansible_user=admin ansible_ssh_private_key_file=~/.ssh/Postgresql-DB-pair.pem

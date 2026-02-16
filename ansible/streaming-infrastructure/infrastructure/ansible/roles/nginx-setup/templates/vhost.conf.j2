@@ -1,0 +1,15 @@
+upstream server_ip {
+        server 16.171.6.74:8888;
+        server 13.48.248.226:8888;
+}
+
+server {
+        listen 80;
+        server_name {{ server_name }};
+
+        location / {
+                proxy_pass http://server_ip;
+                proxy_set_header X-Forwarded-For $remote_addr;
+                proxy_set_header Host $http_host;
+        }
+}

@@ -1,0 +1,8 @@
+---
+- name: install all common package manager
+  apt: 
+      pkg:
+         - vim
+         - git
+         - curl
+      state: present

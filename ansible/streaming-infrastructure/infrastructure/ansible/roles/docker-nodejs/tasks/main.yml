@@ -1,0 +1,99 @@
+---
+- name: Update apt cache
+  apt:
+    update_cache: yes
+  when: ansible_os_family == "Debian"
+
+- name: Install required packages
+  apt:
+    name:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - gnupg
+      - lsb-release
+    state: present
+
+- name: Create keyrings directory
+  file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
+
+- name: Add Docker GPG key (new method)
+  shell: |
+    curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+    chmod a+r /etc/apt/keyrings/docker.gpg
+  args:
+    creates: /etc/apt/keyrings/docker.gpg
+
+- name: Add Docker repository (new method)
+  shell: |
+    echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+  args:
+    creates: /etc/apt/sources.list.d/docker.list
+
+- name: Update apt cache after adding repo
+  apt:
+    update_cache: yes
+
+- name: Install Docker
+  apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+    state: present
+    update_cache: yes
+
+- name: Start and enable Docker service
+  service:
+    name: docker
+    state: started
+    enabled: yes
+
+- name: Install Docker Compose
+  get_url:
+    url: https://github.com/docker/compose/releases/download/v2.24.0/docker-compose-linux-x86_64
+    dest: /usr/local/bin/docker-compose
+    mode: '0755'
+
+- name: Verify Docker Compose installation
+  command: docker-compose --version
+  register: compose_version
+  changed_when: false
+
+- name: create directory for Docker
+  file:
+    path: /home/server
+    state: directory
+    mode: '0755'
+    owner: admin
+    group: admin
+
+- name: Copy docker-compose.yml to target machine
+  copy:
+    src: docker-compose.yml
+    dest: /home/server/docker-compose.yml
+    mode: '0644'
+
+- name: Create src directory
+  file:
+    path: /home/server/src
+    state: directory
+    mode: '0755'
+
+- name: Copy .env to target machine
+  copy:
+    src: .env
+    dest: /home/server/src/.env
+    mode: '0600'
+
+- name: Login to Docker Hub
+  command: docker login -u {{ docker_username }} -p {{ docker_password }}
+  no_log: true
+
+- name: Start containers with docker-compose
+  command: docker-compose up -d
+  args:
+    chdir: /home/server

@@ -1,0 +1,17 @@
+version: "3.8"
+services:
+  backend:
+    image: gauravmawari/new-netflic-backend:latest
+    container_name: new-netflic-backend
+    ports:
+      - "8888:8888"
+    env_file:
+      - ./src/.env
+    restart: always
+
+  llm:
+    image: gauravmawari/recommendation-llm:latest
+    container_name: recommendation-llm
+    ports:
+      - "8000:8000"
+    restart: always

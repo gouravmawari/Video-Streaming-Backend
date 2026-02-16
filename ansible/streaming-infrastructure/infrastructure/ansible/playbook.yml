@@ -1,0 +1,16 @@
+---
+- name: set up common package on all server
+  hosts: all
+  become: yes
+  roles:
+    - common
+- name: Setup docker and nodejs app server
+  hosts: docker-nodejs
+  become: yes
+  roles:
+    - docker-nodejs
+- name: Setup nginx
+  hosts: nginx
+  become: yes
+  roles:
+    - nginx-setup
